@@ -25,6 +25,10 @@ const userSchema = new mongoose.Schema({
     chattedUsers: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
     allowedUsersToChat: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
     isActive: {type: Boolean, default: false},
+    chatsWithOneUser:[{
+                       user_id: mongoose.SchemaTypes.ObjectId,
+                       chats: [mongoose.SchemaTypes.ObjectId]
+                     }],
     //  consider adding dedicated document (eg. chatsWithOneUser: [chattedUser: {userId}, chats: [{chatId}]])
     //  to store chats with a particular user to
     // maintain selected end chat deletion.
