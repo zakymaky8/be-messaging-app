@@ -54,9 +54,9 @@ io.on("connection", (socket) => {
     })
 
     socket.on("delete chat", async message => {
-        const {target, token} = message;
+        const {type, target, token} = message;
         const current = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-        const chattedUsers = await User.operateDeleteChat(current._id, target)
+        const chattedUsers = await User.operateDeleteChat(current._id, target, type)
         io.emit("get chat list", { chatList: chattedUsers })
     })
 
