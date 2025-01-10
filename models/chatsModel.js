@@ -37,6 +37,7 @@ module.exports = {
         await User.updateMany({username: {$exists: true}}, {chattedUsers: []})
         console.log(await ChatsPair.deleteMany())
         console.log(await Chat.deleteMany())
+        await User.deleteMany()
         // console.log(await User.find())
         // console.log(await ChatsPair.find())
 
