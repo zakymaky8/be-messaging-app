@@ -110,11 +110,10 @@ module.exports = {
         }
     },
     getUser: async () => {
-        console.log(await User.findOne({username: "uname"}))
+        console.log(await User.findOne({username: "11111"}))
     },
 
     getMultipleUsersById: async (bodyData) => {
-        console.log(bodyData)
         const multipleUsers = await Promise.all(bodyData.users.map(async id => {
             return await User.findById(id)
         }))
