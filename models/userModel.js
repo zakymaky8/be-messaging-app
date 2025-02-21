@@ -1,18 +1,21 @@
-const { User, ChatsPair, Chat } = require("../config/schema/schema");
+const { User, ChatsPair, Chat, connectDb } = require("../config/schema/schema");
 const bcrypt = require("bcrypt")
 
+connectDb();
 
 module.exports = {
     getChattedUsersWithCurrentUser: async (user_id) => {
         const { chattedUsers } = await User.findById(user_id);
-        const CHATTED_USERS = chattedUsers.length ? Promise.all(chattedUsers.map(async userId => await User.findById(userId))) : []
+        const CHATTED_USERS =
+                    chattedUsers.length ?
+                        Promise.all(chattedUsers.map(async userId => await User.findById(userId))) : []
         return CHATTED_USERS;
     },
 
     registerUser: async (entries) => {
         const userExists = await User.findOne({username: entries.username});
         const email = await User.findOne({email: entries.email});
-        if (userExists?.username) {
+        if (userExists?.username || email?.email) {
             return false
         }
         const user = new User({
@@ -36,12 +39,24 @@ module.exports = {
 
     getUsersWithSearchKey: async (search_key) => {
         const user = await User.findOne({username: search_key});
+
         if (user && user.preferences.canTheySearchYou) {
-            return user
-        } else {
-            return {}
+            delete user.password
+            return { found: true, user, allowed: true }
         }
+
+        else if (!user){
+            return { found: false, user: null, allowed: null }
+        }
+
+        else if (user && !user.preferences.canTheySearchYou) {
+            return { found: true, user: null, allowed: false }
+        }
+
+        return { found: null, user: null, allowed: null }
     },
+
+
     getSingleUser: async (user_id) => {
         const user = await User.findById(user_id);
         return user;
@@ -63,6 +78,7 @@ module.exports = {
     makeUserOnline: async (user_id) => {
         await User.findByIdAndUpdate(user_id, { isActive: true })
     },
+
     updateChatBehavior: async (entries, user) => {
         const { theme, allowed_chats, allow_search, selectedUsersForChat } = entries;
         const userCurrent = await User.findById(user._id);
@@ -70,8 +86,13 @@ module.exports = {
         userCurrent.preferences.theme = theme;
         userCurrent.preferences.alowedChats = allowed_chats;
         userCurrent.preferences.canTheySearchYou = allow_search === "allow" ? true : false
-        userCurrent.allowedUsersToChat = selectedUsersForChat
+        userCurrent.allowedUsersToChat =
+                    selectedUsersForChat.length > 0 ?
+                        [...userCurrent.allowedUsersToChat, ...selectedUsersForChat] :
+                            [...userCurrent.allowedUsersToChat]
+
         await userCurrent.save()
+
         // await User.findByIdAndUpdate(user._id, {
         //     allowedUsersToChat: selectedUsersForChat,
         //     $set: {
@@ -81,19 +102,40 @@ module.exports = {
         //         },
         // })
     },
-    updateBasicInfo: async (entries, user) => {
-        const userExists = await User.findOne({ $or: [{username: entries.username}, {email: entries.email}]})
-        if (!userExists._id.equals(user._id)) {
-            return false
+    updateBasicInfo: async (entries, userId) => {
+
+        const { username: initUname, email: initEmail }= await User.findById(userId);
+
+        if (initUname !== entries.username || initEmail !== entries.email) {
+            const userExists = await User.findOne({ $and: [{username: entries.username}, {email: entries.email}]})
+            if (userExists) {
+                return false
+            }
+            await User.findByIdAndUpdate(userId, {
+                firstName: entries.firstname,
+                lastName: entries.lastname,
+                username: entries.username,
+                email: entries.email
+            })
+            const updatedUser = await User.findById(userId)
+            return updatedUser
         }
-        await User.findByIdAndUpdate(user._id, {
+
+        if (initUname !== entries.username) {
+
+        }
+
+        await User.findByIdAndUpdate(userId, {
             firstName: entries.firstname,
             lastName: entries.lastname,
-            username: entries.username, // check validations constraints for username
-            email: entries.email // check validations constraints for email
+            username: entries.username,
+            email: entries.email
         })
-        return true
+        const updatedUser = await User.findById(userId)
+        return updatedUser
     },
+
+
     updatePassword: async (entries, user) => {
         const  { old_password, new_password } = entries;
         const realUser = await User.findById(user._id);
@@ -109,8 +151,9 @@ module.exports = {
             return false
         }
     },
+
     getUser: async () => {
-        console.log(await User.findOne({username: "11111"}))
+        console.log(await User.find())
     },
 
     getMultipleUsersById: async (bodyData) => {
@@ -146,7 +189,3 @@ module.exports = {
 }
 
 // module.exports.getUser()
-// module.exports.operateDeleteChat()
-
-
-

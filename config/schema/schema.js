@@ -9,22 +9,20 @@ const userSchema = new mongoose.Schema({
                 required: true,
                 unique: true,
                 lowercase: true,
-                minLength: 5,
-                maxLength: 7
               },
+
     password: { type: String, required: true},
 
-    email: {
-                type: String,
-                required: true,
-                // validate: {
-                //     validator: (val) => val.includes("@") ,
-                //     message: props => "Ivalid email " + props.message
-                // }
-            },
-    chattedUsers: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
-    allowedUsersToChat: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
+    email: { type: String, required: true},
+    createdAt: { type: Date, default: () => Date.now() },
+    updatedAt: { type: Date },
+    profilePic: { type: String },
+
     isActive: {type: Boolean, default: false},
+
+    allowedUsersToChat: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
+
+    chattedUsers: [{type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
     chatsWithOneUser:[{
                        user_id: mongoose.SchemaTypes.ObjectId,
                        chats: [mongoose.SchemaTypes.ObjectId]
@@ -47,6 +45,7 @@ const prefSchema = new mongoose.Schema({
 
 //  single chat schema
 const chatSchema = new mongoose.Schema({
+    // user pair userPair: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User"}]
     user_id: {type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     chatted_to: {type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     messageText: String,
@@ -58,8 +57,8 @@ const chatSchema = new mongoose.Schema({
 //  chats pair schema to signify double user chats
 const chatsPairSchema = new mongoose.Schema({
     userPair: [{ type: mongoose.SchemaTypes.ObjectId, ref: "User"}],
-    currentUser: { type: mongoose.SchemaTypes.ObjectId, ref: "User"},
-    chattedUser: { type: mongoose.SchemaTypes.ObjectId, ref: "User"},
+    // currentUser: { type: mongoose.SchemaTypes.ObjectId, ref: "User"},
+    // chattedUser: { type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     chats: [{type: mongoose.SchemaTypes.ObjectId, ref: "Chat"}]
 })
 

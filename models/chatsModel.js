@@ -1,15 +1,25 @@
-const { User, Chat, ChatsPair, Pref } = require("../config/schema/schema")
+const { User, Chat, ChatsPair, Pref, connectDb } = require("../config/schema/schema")
 
 //  major task try to eliminate chats pair model and use chat model only
 
-module.exports = {
-    getChatPairsByTwo: async (current_user_id, targeted_user_id) => {
-        const chatPairs = await ChatsPair.findOne({currentUser: current_user_id, targetedUser: targeted_user_id})
-        return chatPairs
-    },
 
-    getSortedChatPairByCreationTime: async (current, target) => {
+connectDb()
+
+module.exports = {
+
+    // getChatPairsByTwo: async (current_user_id, targeted_user_id) => {
+    //     const chatPairs = await ChatsPair.findOne({currentUser: current_user_id, targetedUser: targeted_user_id})
+    //     return chatPairs
+    // },
+
+    getConversationsByTwo: async (current, target) => {
+
+
+        // if (current === target) {
+
+        // }
         const chatPairs = await ChatsPair.findOne({userPair: { $all: [current, target]}});
+        // const chatPairs = await ChatsPair.findOne({userPair: [target, current]});
         if (chatPairs) {
             const chatCollections = await Promise.all(chatPairs.chats.map(async chatId => await Chat.findById(chatId)));
             return chatCollections.sort((a, b) => a?.createdAt-b?.createdAt)
@@ -30,16 +40,23 @@ module.exports = {
             }
         }
     },
+    
     fetchAllChatPairs: async () => {
         // console.log(await ChatsPair.find())
         // const users = await User.find({username: {$exists: true}});
         // await ChatsPair.updateMany({currentUser: {$exists: true}}, {chats: []})
-        await User.updateMany({username: {$exists: true}}, {chattedUsers: []})
-        console.log(await ChatsPair.deleteMany())
-        console.log(await Chat.deleteMany())
-        await User.deleteMany()
-        // console.log(await User.find())
+        // await User.updateMany({username: {$exists: true}}, {chattedUsers: []})
+        // console.log(await ChatsPair.deleteMany())
         // console.log(await ChatsPair.find())
+        // console.log(await Chat.deleteMany())
+        // await User.deleteMany()
+        // console.log(await ChatsPair.find())
+
+        // const user = await User.find({ firstName: { $ne: null } })
+        // user.forEach(usr => usr.chattedUsers = [])
+        // await Promise.all(user.map(async usr => await usr.save()))
+        // console.log(user)
+        // console.log("data", await ChatsPair.find({userPair: ["67b497227297807777c40514", "67b497227297807777c40514"] }))
 
     },
 
@@ -63,11 +80,11 @@ module.exports = {
         await chat.save()
         await ChatsPair.findOneAndUpdate({userPair: { $all: [target, current] }}, { $push: { chats: chat._id } });
     },
+
     deleteChatById: async (msgId, target, current) => {
         const { _id, chats } = await ChatsPair.findOne({userPair: { $all: [target, current] }})
         const newChatCol = chats.filter(chat => !chat.equals(msgId));
         await ChatsPair.findByIdAndUpdate(_id, { chats: newChatCol })
-        console.log(await ChatsPair.findById(_id))
         await Chat.findByIdAndDelete(msgId);
     },
 
@@ -79,5 +96,7 @@ module.exports = {
         })
     }
 }
+
+
 
 // module.exports.fetchAllChatPairs()

@@ -5,16 +5,16 @@ const { chattedUsersGet, registerUserPost, userSearchResultsGet, updateUserInfor
 const indexRouter = Router();
 
 
-indexRouter.get("/users", authenticateUser, chattedUsersGet)
+indexRouter.get("/api/users", authenticateUser, chattedUsersGet)
 
 indexRouter.post("/register", registerUserPost)
 
-indexRouter.post("/login", getUserToken)
+indexRouter.post("/auth/login", getUserToken)
 
 
-indexRouter.get("/search", authenticateUser, userSearchResultsGet)
+indexRouter.get("/api/user/search", authenticateUser, userSearchResultsGet)
 
-indexRouter.put("/update_user_info", authenticateUser, updateUserInformation)
+indexRouter.put("/api/user/:userId", authenticateUser, updateUserInformation)
 
 indexRouter.post("/get_users_by_id", authenticateUser, multipleUsersGet)
 

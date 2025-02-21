@@ -5,6 +5,6 @@ const { authenticateUser } = require("../auth/jwt_auth");
 const chatRouter = Router();
 
 
-chatRouter.get("/chats", authenticateUser, chatPairsByBothGet)
+chatRouter.get("/api/chats/conversations_with/:target", authenticateUser, chatPairsByBothGet)
 
 module.exports = chatRouter;

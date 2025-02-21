@@ -3,13 +3,17 @@ const User = require("../models/userModel");
 
 
 const chatPairsByBothGet = async (req, res) => {
-    const  { target } = req.query;
+    const  { target } = req.params;
     if (req.user) {
-        const chatCollections = await Chat.getSortedChatPairByCreationTime(req.user._id, target)
+        const chatCollections = await Chat.getConversationsByTwo(req.user._id, target)
         const targetedUser = await User.getSingleUser(target)
-        res.json({currentUser: req.user, targetedUser, chatCollections})
+        return res
+                .status(200)
+                .json({ success: true, message: "Successful!", data: {currentUser: req.user, targetedUser, chatCollections}})
     } else {
-        res.sendStatus(403)
+        res
+          .status(401)
+          .json({ success: false, message: "Please Login!", data: null })
     }
 }
 
