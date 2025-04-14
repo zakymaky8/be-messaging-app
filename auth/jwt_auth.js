@@ -17,11 +17,10 @@ const getUserToken = async (req, res) => {
     const pwdMatches = user ? await bcrypt.compare(password, user.password) : false
 
     if (!user || (user && !pwdMatches)) {
-        return res.status(401).json({error: "Incorrect Credential!"})
+        return res.status(401).json({success: false, message: "Incorrect Credential!", token: null, user: null})
     } else {
         const token = jwt.sign(user.toObject(), process.env.ACCESS_TOKEN_SECRET);
-        await User.findByIdAndUpdate(user._id, {isActive: true})
-        return res.json({message: "Successfully Logged in!", token, user})
+        return res.status(200).json({ success:true, message: "Successfully Logged in!", token, user})
     }
 }
 
@@ -31,10 +30,10 @@ const getUserToken = async (req, res) => {
 const authenticateUser = async (req, res, next) => {
 
     const bearerHeader = req.headers["authorization"];
+    const token = bearerHeader ? bearerHeader.split(" ")[1] : undefined
 
     try {
-        if (bearerHeader) {
-            const token = bearerHeader.split(" ")[1];
+        if (bearerHeader && token !== "undefined") {
             jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, user) => {
                 if (err) {
                     return res

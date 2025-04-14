@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: "http://localhost:3008",
+        origin: ["http://localhost:3008", "http://10.6.194.80:3008"],
         methods: "*"
     }
 })
@@ -27,42 +27,46 @@ const io = new Server(server, {
 io.on("connection", (socket) => {
     socket.on("send message", async (message) => {
 
-        const { currentUserId, targetedUserId, chat_msg } = message;
+        const { currentUserId, targetedUserId, chat_msg, chat_pair, replied_to } = message;
 
-        await Chat.createChatMessage(currentUserId, targetedUserId, chat_msg);
+        await Chat.createChatMessage(currentUserId, targetedUserId, chat_msg, replied_to);
         const chatCollections = await Chat.getConversationsByTwo(currentUserId, targetedUserId)
-        io.emit("get message", chatCollections)
+        io.emit("get message", {chatCollections, chat_pair})
     })
 
 
     socket.on("delete message", async (data) => {
-        const { msgId, target, current } = data;
+        const { msgId, target, current, chat_pair } = data;
         await Chat.deleteChatById(msgId, target, current);
         const chatCollections = await Chat.getConversationsByTwo(current, target)
-        io.emit("get reminants", chatCollections)
+        io.emit("get reminants", {chatCollections, chat_pair})
     })
 
     socket.on("edit message", async (message) => {
-        const  {msgId, current, target, updatedText} = message;
+        const  {msgId, current, target, updatedText, chat_pair} = message;
         Chat.editChatMessageText(msgId, current, target, updatedText)
         const chatCollections = await Chat.getConversationsByTwo(current, target)
-        io.emit("get updated", chatCollections)
+        io.emit("get updated", {chatCollections, chat_pair})
     })
 
 
     socket.on("go offline", async (user_id)=>{
         await User.makeUserOffline(user_id)
+        const offUser = await User.getUser(user_id)
+        io.emit("get_new_online_status", { user: offUser })
     })
 
-    socket.on("go online", async (user_id)=>{
-        await User.makeUserOnline(user_id)
+    socket.on("go online", async (user_id) => {
+        await User.makeUserOnline(user_id);
+        const activeUser = await User.getUser(user_id)
+        io.emit("get_new_online_status", { user: activeUser })
     })
 
     socket.on("delete chat", async message => {
-        const {type, target, token} = message;
-        const current = jwt.verify(token, process.env.ACCESS_TOKEN_SECRET)
-        const chattedUsers = await User.operateDeleteChat(current._id, target, type)
-        io.emit("get chat list", { chatList: chattedUsers })
+        const {current, target, type} = message;
+        const chattedUsers = await User.operateDeleteChat(current, target, type)
+        // io.emit("get chat list", { chatList: chattedUsers })
+        io.emit("get chat list")
     })
 
 })
@@ -77,10 +81,11 @@ app.use("/", chatRouter)
 
 
 
-app.get("/api/current_user", authenticateUser, (req, res) => {
-    res
-        .status(200)
-        .json({ success: true, message: "Successful!", data: {current: req.user}})
+app.get("/api/current_user", authenticateUser, async (req, res) => {
+    const grantedUsers = await Promise.all(req.user.allowedUsersToChat.map((userId) => User.getUser(userId)));
+    return res
+            .status(200)
+            .json({ success: true, message: "Successful!", data: {current: {...req.user, allowedUsersToChat: grantedUsers}}})
 })
 
 

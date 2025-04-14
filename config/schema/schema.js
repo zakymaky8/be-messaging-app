@@ -17,6 +17,7 @@ const userSchema = new mongoose.Schema({
     createdAt: { type: Date, default: () => Date.now() },
     updatedAt: { type: Date },
     profilePic: { type: String },
+    savedMessages: { type: [mongoose.SchemaTypes.ObjectId] },
 
     isActive: {type: Boolean, default: false},
 
@@ -49,8 +50,9 @@ const chatSchema = new mongoose.Schema({
     user_id: {type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     chatted_to: {type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     messageText: String,
+    replied_to: {type: mongoose.SchemaTypes.ObjectId, ref: "Chat"},
     createdAt: { type: Date, default: () => Data.now(), immutable: true },
-    updatedAt: { type: Date, default: () => Data.now(), immutable: true },
+    updatedAt: { type: Date, default: () => Data.now()},
     isUpdated: { type: Boolean, default: false }
 })
 
@@ -61,6 +63,12 @@ const chatsPairSchema = new mongoose.Schema({
     // chattedUser: { type: mongoose.SchemaTypes.ObjectId, ref: "User"},
     chats: [{type: mongoose.SchemaTypes.ObjectId, ref: "Chat"}]
 })
+
+// const alertSchema = new mongoose.Schema({
+//     type: String,
+//     message: String,
+//     user_id: { type: String, ref: "User" }
+// })
 
 //  work on multiuser schema for making a group
 // const User = mongoose.model("User", userSchema).fin

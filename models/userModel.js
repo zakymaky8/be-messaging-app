@@ -37,15 +37,16 @@ module.exports = {
         return true
     },
 
-    getUsersWithSearchKey: async (search_key) => {
+    getUsersWithSearchKey: async (search_key, seeker) => {
         const user = await User.findOne({username: search_key});
+        const isMe = user ? seeker.username === user.username : false
 
-        if (user && user.preferences.canTheySearchYou) {
+        if (user && user.preferences.canTheySearchYou && !isMe) {
             delete user.password
             return { found: true, user, allowed: true }
         }
 
-        else if (!user){
+        else if (!user || isMe){
             return { found: false, user: null, allowed: null }
         }
 
@@ -69,9 +70,6 @@ module.exports = {
     deleteAllUser: async () => {
         await User.deleteMany()
     },
-    getUsers: async () => {
-        console.log(await User.find())
-    },
     makeUserOffline: async (user_id) => {
         await User.findByIdAndUpdate(user_id, { isActive: false })
     },
@@ -82,25 +80,12 @@ module.exports = {
     updateChatBehavior: async (entries, user) => {
         const { theme, allowed_chats, allow_search, selectedUsersForChat } = entries;
         const userCurrent = await User.findById(user._id);
-
         userCurrent.preferences.theme = theme;
         userCurrent.preferences.alowedChats = allowed_chats;
         userCurrent.preferences.canTheySearchYou = allow_search === "allow" ? true : false
-        userCurrent.allowedUsersToChat =
-                    selectedUsersForChat.length > 0 ?
-                        [...userCurrent.allowedUsersToChat, ...selectedUsersForChat] :
-                            [...userCurrent.allowedUsersToChat]
+        userCurrent.allowedUsersToChat = [...selectedUsersForChat]
 
         await userCurrent.save()
-
-        // await User.findByIdAndUpdate(user._id, {
-        //     allowedUsersToChat: selectedUsersForChat,
-        //     $set: {
-        //             "preferences.theme": theme,
-        //             "preferences.alowedChats": allowed_chats,
-        //             "preferences.canTheySearchYou": allow_search === "allow" ? true : false
-        //         },
-        // })
     },
     updateBasicInfo: async (entries, userId) => {
 
@@ -152,8 +137,8 @@ module.exports = {
         }
     },
 
-    getUser: async () => {
-        console.log(await User.find())
+    getUser: async (user_id) => {
+        return await User.findById(user_id)
     },
 
     getMultipleUsersById: async (bodyData) => {
@@ -179,12 +164,12 @@ module.exports = {
 
         const chatPair = await ChatsPair.findOne({ userPair: {$all: [current, target] }});
 
-        await Promise.all(chatPair.chats.map(async chat => await Chat.findByIdAndDelete(chat)))
+        await Promise.all(chatPair.chats.map(chat => Chat.findByIdAndDelete(chat)))
         await ChatsPair.findOneAndDelete({userPair: {$all: [current, target] }});
 
-        const { chattedUsers } = await User.findById(current);
-        const CHATTED_USERS = chattedUsers.length ? Promise.all(chattedUsers.map(async userId => await User.findById(userId))) : []
-        return CHATTED_USERS;
+        // const { chattedUsers } = await User.findById(current);
+        // const CHATTED_USERS = chattedUsers.length ? Promise.all(chattedUsers.map(async userId => await User.findById(userId))) : []
+        // return CHATTED_USERS;
     }
 }
 

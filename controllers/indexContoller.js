@@ -28,11 +28,11 @@ const singleUserGet = async (req, res) => {
 const userSearchResultsGet = async (req, res) => {
     const { search_key } = req.query;
     if (req.user) {
-        const { found, allowed, user } = await User.getUsersWithSearchKey(search_key);
+        const { found, allowed, user } = await User.getUsersWithSearchKey(search_key.trim(), req.user);
         if ( found && allowed ) {
             return res
                      .status(200)
-                     .json({success: true, message: "Successful!", data: {user}})
+                     .json({success: true, message: "Successful!", data: { user }})
         }
 
         if ( found && !allowed ) {
@@ -58,9 +58,9 @@ const userSearchResultsGet = async (req, res) => {
 const registerUserPost = async (req, res) => {
     const isValid = await User.registerUser(req.body);
     if (!isValid) {
-        return res.status(404).json({error: "Username Exists!"})
+        return res.status(409).json({success: false, message: "Username or Email exists!"})
     }
-    return res.status(200).json({message: "Registration successfull!"})
+    return res.status(200).json({success: true, message: "Registration successfull!"})
 }
 
 const updateUserInformation = async (req, res) => {

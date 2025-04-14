@@ -18,6 +18,75 @@ const chatPairsByBothGet = async (req, res) => {
 }
 
 
+const getMessagesWithself = async (req, res) => {
+    if (req.user) {
+        const messages = await Chat.fetchSavedMessages(req.user)
+        return res
+                .status(200)
+                .json({ success: true, message: "Successfull!", data: { messages } })
+    }
+
+    else {
+        return res
+                .status(401)
+                .json({ success: false, message: "Please Login!", data: null })
+    }
+}
+
+
+const deleteMsgWithSelf = async (req, res) => {
+    const { chat_id } = req.params;
+
+    if (req.user) {
+        await Chat.deleteSavedMessage(req.user, chat_id)
+
+        return res
+                .status(200)
+                .json({ success: true, message: "messsage successfully deleted!"})
+    }
+
+    else {
+        return res
+                .status(401)
+                .json({ success: false, message: "Please Login!", data: null })
+    }
+}
+
+
+const updateMsgWithSelf = async (req, res) => {
+    const { chat_id } = req.params;
+
+    if (req.user) {
+        await Chat.updateSavedMessage(req.body.chat_msg, chat_id)
+
+        return res
+                .status(200)
+                .json({ success: true, message: "messsage successfully updated!"})
+    }
+
+    else {
+        return res
+                .status(401)
+                .json({ success: false, message: "Please Login!", data: null })
+    }
+}
+
+const createMsgWithSelf = async (req, res) => {
+    if (req.user) {
+        await Chat.createSavedMessage(req.user, req.body.chat_msg)
+
+        return res
+                .status(200)
+                .json({ success: true, message: "messsage successfully created!"})
+    }
+
+    else {
+        return res
+                .status(401)
+                .json({ success: false, message: "Please Login!", data: null })
+    }
+}
+
 const createChatMessagePost = async (req, res) => {
     if (req.user) {
         const { chat_msg } = req.body;
@@ -32,5 +101,9 @@ const createChatMessagePost = async (req, res) => {
 
 module.exports = {
     chatPairsByBothGet,
-    createChatMessagePost
+    createChatMessagePost,
+    getMessagesWithself,
+    deleteMsgWithSelf,
+    updateMsgWithSelf,
+    createMsgWithSelf
 }

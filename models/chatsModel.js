@@ -42,21 +42,20 @@ module.exports = {
     },
     
     fetchAllChatPairs: async () => {
-        // console.log(await ChatsPair.find())
         // const users = await User.find({username: {$exists: true}});
         // await ChatsPair.updateMany({currentUser: {$exists: true}}, {chats: []})
         // await User.updateMany({username: {$exists: true}}, {chattedUsers: []})
         // console.log(await ChatsPair.deleteMany())
         // console.log(await ChatsPair.find())
         // console.log(await Chat.deleteMany())
+        // console.log(await Chat.find())
         // await User.deleteMany()
+        await User.updateMany({ savedMessages: [] })
         // console.log(await ChatsPair.find())
-
-        // const user = await User.find({ firstName: { $ne: null } })
+        const user = await User.find({ firstName: { $ne: null } })
         // user.forEach(usr => usr.chattedUsers = [])
         // await Promise.all(user.map(async usr => await usr.save()))
         // console.log(user)
-        // console.log("data", await ChatsPair.find({userPair: ["67b497227297807777c40514", "67b497227297807777c40514"] }))
 
     },
 
@@ -68,7 +67,8 @@ module.exports = {
         }).save()
     },
 
-    createChatMessage: async (current, target, chat_msg) => {
+    createChatMessage: async (current, target, chat_msg, replied_to) => {
+
         const chat = new Chat({
             chatted_to: target,
             messageText: chat_msg,
@@ -77,6 +77,7 @@ module.exports = {
             updatedAt: new Date(),
             isUpdated: false
         })
+        Boolean(replied_to) ? chat.replied_to = replied_to : null;
         await chat.save()
         await ChatsPair.findOneAndUpdate({userPair: { $all: [target, current] }}, { $push: { chats: chat._id } });
     },
@@ -94,7 +95,46 @@ module.exports = {
             isUpdated: true,
             updatedAt: new Date()
         })
-    }
+    },
+
+    fetchSavedMessages: async (user) => {
+        const userr = await User.findById(user._id)
+        const messages = userr.savedMessages ? await Promise.all(userr.savedMessages.map( id => Chat.findById(id))) : [];
+        return messages.filter(message => Boolean(message) !== false)
+    },
+
+    createSavedMessage: async (user, text) => {
+        const chat = new Chat({
+            messageText: text,
+            user_id: user._id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            isUpdated: false
+        })
+        await chat.save();
+
+        const userCurrent = await User.findById(user._id);
+        const addedSaves = [...userCurrent.savedMessages, chat._id];
+        await User.findByIdAndUpdate(user._id, { savedMessages: [...addedSaves] } )
+    },
+
+    deleteSavedMessage: async (user, chat_id) => {
+        const cuser = await User.findById(user._id);
+        const filtered = cuser.savedMessages.filter(msgs => !msgs.equals(chat_id))
+        cuser.savedMessages = filtered
+        await cuser.save()
+        await Chat.deleteOne({ _id: chat_id })
+
+    },
+
+    updateSavedMessage: async ( updatedText, chat_id ) => {
+        await Chat.findByIdAndUpdate(chat_id, {
+            messageText: updatedText,
+            isUpdated: true,
+            updatedAt: new Date()
+        })
+    },
+
 }
 
 
