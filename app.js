@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: [process.env.CLIENT_APP_FOR_SOCKET],
+        origin: process.env.CLIENT_APP_FOR_SOCKET || "https://chatwithchatter.vercel.app",
         methods: "*"
     }
 })
