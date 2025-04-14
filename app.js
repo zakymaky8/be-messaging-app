@@ -2,7 +2,6 @@ const express = require("express");
 const cors = require("cors");
 const indexRouter = require("./routes/indexRouter")
 const chatRouter = require("./routes/chatRouter");
-const jwt = require("jsonwebtoken");
 
 require("dotenv").config()
 
@@ -20,7 +19,8 @@ const server = http.createServer(app);
 const io = new Server(server, {
     cors: {
         origin: process.env.CLIENT_APP_FOR_SOCKET || "https://chatwithchatter.vercel.app",
-        methods: "*"
+        methods: "*",
+        credentials: true
     }
 })
 
