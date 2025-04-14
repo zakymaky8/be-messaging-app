@@ -19,7 +19,7 @@ const server = http.createServer(app);
 
 const io = new Server(server, {
     cors: {
-        origin: ["http://localhost:3008", "http://10.6.194.80:3008"],
+        origin: [process.env.CLIENT_APP_FOR_SOCKET],
         methods: "*"
     }
 })
@@ -65,7 +65,6 @@ io.on("connection", (socket) => {
     socket.on("delete chat", async message => {
         const {current, target, type} = message;
         const chattedUsers = await User.operateDeleteChat(current, target, type)
-        // io.emit("get chat list", { chatList: chattedUsers })
         io.emit("get chat list")
     })
 
@@ -90,10 +89,8 @@ app.get("/api/current_user", authenticateUser, async (req, res) => {
 
 
 
-
-
 server.listen(1234, () => {
-    console.log("app is listening on port", 1234)
+    console.log("server is listening on port", 1234)
 })
 
 

@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const mongoose = require("mongoose");
 
 // user schema
@@ -76,7 +78,7 @@ const chatsPairSchema = new mongoose.Schema({
 
 
 async function connectDb() {
-    await mongoose.connect("mongodb://localhost/chatter")
+    await mongoose.connect(process.env.DB_URL)
 
 }
 
