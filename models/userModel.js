@@ -62,10 +62,6 @@ module.exports = {
         const user = await User.findById(user_id);
         return user;
     },
-    // getTargetedUserForChat: async (targeted_user_id) => {
-    //     const targetedUser = await User.findById(targeted_user_id)
-    //     return targetedUser
-    // },
 
     deleteAllUser: async () => {
         await User.deleteMany()
@@ -166,11 +162,5 @@ module.exports = {
 
         await Promise.all(chatPair.chats.map(chat => Chat.findByIdAndDelete(chat)))
         await ChatsPair.findOneAndDelete({userPair: {$all: [current, target] }});
-
-        // const { chattedUsers } = await User.findById(current);
-        // const CHATTED_USERS = chattedUsers.length ? Promise.all(chattedUsers.map(async userId => await User.findById(userId))) : []
-        // return CHATTED_USERS;
     }
 }
-
-// module.exports.getUser()

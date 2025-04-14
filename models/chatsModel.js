@@ -6,20 +6,9 @@ const { User, Chat, ChatsPair, Pref, connectDb } = require("../config/schema/sch
 connectDb()
 
 module.exports = {
-
-    // getChatPairsByTwo: async (current_user_id, targeted_user_id) => {
-    //     const chatPairs = await ChatsPair.findOne({currentUser: current_user_id, targetedUser: targeted_user_id})
-    //     return chatPairs
-    // },
-
     getConversationsByTwo: async (current, target) => {
 
-
-        // if (current === target) {
-
-        // }
         const chatPairs = await ChatsPair.findOne({userPair: { $all: [current, target]}});
-        // const chatPairs = await ChatsPair.findOne({userPair: [target, current]});
         if (chatPairs) {
             const chatCollections = await Promise.all(chatPairs.chats.map(async chatId => await Chat.findById(chatId)));
             return chatCollections.sort((a, b) => a?.createdAt-b?.createdAt)
@@ -39,24 +28,6 @@ module.exports = {
                 return []
             }
         }
-    },
-    
-    fetchAllChatPairs: async () => {
-        // const users = await User.find({username: {$exists: true}});
-        // await ChatsPair.updateMany({currentUser: {$exists: true}}, {chats: []})
-        // await User.updateMany({username: {$exists: true}}, {chattedUsers: []})
-        // console.log(await ChatsPair.deleteMany())
-        // console.log(await ChatsPair.find())
-        // console.log(await Chat.deleteMany())
-        // console.log(await Chat.find())
-        // await User.deleteMany()
-        await User.updateMany({ savedMessages: [] })
-        // console.log(await ChatsPair.find())
-        const user = await User.find({ firstName: { $ne: null } })
-        // user.forEach(usr => usr.chattedUsers = [])
-        // await Promise.all(user.map(async usr => await usr.save()))
-        // console.log(user)
-
     },
 
     createChatPair: async (current, target) => {
@@ -136,7 +107,3 @@ module.exports = {
     },
 
 }
-
-
-
-// module.exports.fetchAllChatPairs()
